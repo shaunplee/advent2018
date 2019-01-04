@@ -1,0 +1,481 @@
+
+./Setup.hs,15
+main main1,2
+
+./app/Main.hs,56
+module Main Main0,1
+main main17,18
+main main18,19
+
+./test/Spec.hs,30
+main main0,1
+main main1,2
+
+./src/Seven.hs,603
+module Seven Seven0,1
+testInput testInput9,10
+testEdges testEdges17,18
+type IStep IStep19,20
+type Edge Edge20,21
+parseStep parseStep23,24
+parseStep parseStep24,25
+parseLine parseLine32,33
+parseLine parseLine33,34
+collectISteps collectISteps37,38
+collectISteps collectISteps38,39
+startable startable40,41
+startable startable41,42
+startableW startableW47,48
+startableW startableW48,49
+go go53,54
+go go54,55
+runOne runOne59,60
+runOne runOne60,61
+goTwo goTwo65,66
+goTwo goTwo68,69
+iterState iterState70,71
+iterState iterState73,74
+run run86,87
+run run87,88
+
+./src/Thirteen.hs,1560
+module Thirteen Thirteen2,3
+data DirectionDirection14,15
+  = NN15,16
+  | SS16,17
+  | EE17,18
+  | WW18,19
+data Cart Cart21,22
+data Cart = CartCart21,22
+  { dir dir22,23
+  , pos pos23,24
+  , turns turns24,25
+  , startPos startPos25,26
+instance instance28,29
+data Track Track32,33
+data Track = NS NS32,33
+data Track = NS | EW EW32,33
+data Track = NS | EW | TurnNE TurnNE32,33
+data Track = NS | EW | TurnNE | TurnNW TurnNW32,33
+data Track = NS | EW | TurnNE | TurnNW | Inter Inter32,33
+type Tracks Tracks34,35
+newtype GameState GameState36,37
+newtype GameState = GameState GameState36,37
+testInput testInput38,39
+testInput testInput39,40
+testInput' testInput'46,47
+testInput' testInput'47,48
+testGameState testGameState55,56
+testGameState testGameState56,57
+testGameState' testGameState'58,59
+testGameState' testGameState'59,60
+parseMap parseMap61,62
+parseMap parseMap62,63
+parseSquare parseSquare66,67
+parseSquare parseSquare67,68
+parseRow parseRow79,80
+parseRow parseRow80,81
+parseCarts parseCarts90,91
+parseCarts parseCarts91,92
+parseCartRow parseCartRow95,96
+parseCartRow parseCartRow96,97
+tick tick107,108
+tick tick108,109
+step step118,119
+step step119,120
+stepCycle stepCycle132,133
+stepCycle stepCycle133,134
+stepCart stepCart147,148
+stepCart stepCart148,149
+left left178,179
+left left179,180
+right right184,185
+right right185,186
+findDup findDup190,191
+findDup findDup191,192
+run' run'199,200
+run' run'200,201
+run run210,211
+run run211,212
+
+./src/Fourteen.hs,640
+module Fourteen Fourteen0,1
+mkNewRecipes mkNewRecipes10,11
+mkNewRecipes mkNewRecipes11,12
+myInput myInput13,14
+myInput myInput14,15
+type Elves Elves16,17
+type Scoreboard Scoreboard18,19
+data GameState GameState20,21
+data GameState = GameState GameState20,21
+step step22,23
+step step23,24
+run run32,33
+run run33,34
+runTwo runTwo35,36
+runTwo runTwo36,37
+subseqPos subseqPos40,41
+subseqPos subseqPos41,42
+checkEndTwoSpots checkEndTwoSpots47,48
+checkEndTwoSpots checkEndTwoSpots48,49
+checkEnd checkEnd50,51
+checkEnd checkEnd51,52
+step' step'58,59
+step' step'59,60
+run' run'69,70
+run' run'70,71
+
+./src/Six.hs,221
+module Six Six0,1
+testInput testInput7,8
+parseLine parseLine14,15
+parseLine parseLine15,16
+distance distance18,19
+distance distance19,20
+runOne runOne21,22
+runOne runOne22,23
+run run60,61
+run run61,62
+
+./src/Twelve.hs,662
+module Twelve Twelve0,1
+testInitialState testInitialState9,10
+testRules testRules11,12
+newtype PlantState PlantState26,27
+newtype PlantState = PlantState PlantState26,27
+instance instance28,29
+parseState parseState37,38
+parseState parseState38,39
+newtype Rule Rule42,43
+newtype Rule = Rule Rule42,43
+findRule findRule57,58
+findRule findRule58,59
+ruleParser ruleParser68,69
+ruleParser ruleParser69,70
+updateState updateState79,80
+updateState updateState80,81
+sumPlants sumPlants93,94
+sumPlants sumPlants94,95
+Success Success96,97
+run run98,99
+run run99,100
+myInitialState myInitialState101,102
+myRules myRules103,104
+
+./src/Fifteen.hs,1381
+module Fifteen Fifteen2,3
+testInput testInput16,17
+type Pos Pos26,27
+data SearchPos SearchPos28,29
+data SearchPos = SearchPos SearchPos28,29
+instance instance30,31
+type Hp Hp34,35
+data CreatureT CreatureT36,37
+data CreatureT = Goblin Goblin36,37
+data CreatureT = Goblin | Elf Elf36,37
+data Creature Creature38,39
+data Creature = Creature Creature38,39
+type Creatures Creatures48,49
+type Board Board50,51
+data Square Square52,53
+data Square = Open Open52,53
+data Square = Open | Wall Wall52,53
+newtype GameState GameState58,59
+newtype GameState = GameState GameState58,59
+findCreature findCreature76,77
+findCreature findCreature77,78
+creaturesInRow creaturesInRow83,84
+creaturesInRow creaturesInRow84,85
+parseSquare parseSquare87,88
+parseSquare parseSquare88,89
+parseRow parseRow93,94
+parseRow parseRow94,95
+parseMap parseMap100,101
+parseMap parseMap101,102
+openNeighbors openNeighbors110,111
+openNeighbors openNeighbors111,112
+notOccupied notOccupied115,116
+notOccupied notOccupied116,117
+data PathPos PathPos118,119
+data PathPos = PathPos PathPos118,119
+data PathPos = PathPos { prev prev118,119
+                       , cur cur119,120
+                       , cumdist cumdist120,121
+shortestPath shortestPath125,126
+shortestPath shortestPath126,127
+estDist estDist160,161
+estDist estDist161,162
+
+./src/Sixteen.hs,1640
+module Sixteen Sixteen2,3
+testSample testSample12,13
+data OpcodeOpcode17,18
+  = AddrAddr18,19
+  | AddiAddi19,20
+  | MulrMulr20,21
+  | MuliMuli21,22
+  | BanrBanr22,23
+  | BaniBani23,24
+  | BorrBorr24,25
+  | BoriBori25,26
+  | SetrSetr26,27
+  | SetiSeti27,28
+  | GtirGtir28,29
+  | GtriGtri29,30
+  | GtrrGtrr30,31
+  | EqirEqir31,32
+  | EqriEqri32,33
+  | EqrrEqrr33,34
+allOps allOps36,37
+allOps allOps37,38
+data Instruction Instruction56,57
+data Instruction = InstructionInstruction56,57
+  { op op57,58
+  , inA inA58,59
+  , inB inB59,60
+  , outC outC60,61
+execInstruction execInstruction63,64
+execInstruction execInstruction64,65
+step step83,84
+step step84,85
+type Registers Registers87,88
+data Sample Sample89,90
+data Sample = SampleSample89,90
+  { before before90,91
+  , unknownOp unknownOp91,92
+  , sInA sInA92,93
+  , sInB sInB93,94
+  , sOutC sOutC94,95
+  , after after95,96
+sampleParser sampleParser99,100
+sampleParser sampleParser100,101
+parseSamples parseSamples124,125
+parseSamples parseSamples125,126
+possibleOpcodes possibleOpcodes129,130
+possibleOpcodes possibleOpcodes130,131
+run run139,140
+run run140,141
+computeOpcodes computeOpcodes146,147
+computeOpcodes computeOpcodes147,148
+reduceOpcodes reduceOpcodes155,156
+reduceOpcodes reduceOpcodes156,157
+deleteOp deleteOp163,164
+deleteOp deleteOp164,165
+deduceOpcodes deduceOpcodes172,173
+deduceOpcodes deduceOpcodes173,174
+parseInstruction parseInstruction175,176
+parseInstruction parseInstruction176,177
+readProgram readProgram179,180
+readProgram readProgram180,181
+
+./src/Eight.hs,453
+module Eight Eight0,1
+testInput testInput6,7
+data Node Node8,9
+data Node = Node Node8,9
+data Node = Node { children children8,9
+                 , metadata metadata9,10
+parseInput parseInput12,13
+parseInput parseInput13,14
+nodeParser nodeParser17,18
+nodeParser nodeParser18,19
+sumNode sumNode27,28
+sumNode sumNode28,29
+value value30,31
+value value31,32
+runOne runOne41,42
+runOne runOne42,43
+run run44,45
+run run45,46
+
+./src/Lib.hs,65
+module LibLib0,1
+someFunc someFunc4,5
+someFunc someFunc5,6
+
+./src/Three.hs,674
+module Three Three0,1
+newtype Sheet Sheet7,8
+newtype Sheet = Sheet Sheet7,8
+emptySheet emptySheet9,10
+emptySheet emptySheet10,11
+emptyRow emptyRow12,13
+emptyRow emptyRow13,14
+data Claim Claim15,16
+data Claim = ClaimClaim15,16
+  { num num16,17
+  , pos pos17,18
+  , dim dim18,19
+claimParser claimParser21,22
+claimParser claimParser22,23
+parseInput parseInput39,40
+parseInput parseInput40,41
+runOne runOne42,43
+runOne runOne43,44
+updateSheet updateSheet56,57
+updateSheet updateSheet57,58
+addVecs addVecs68,69
+addVecs addVecs69,70
+overlap overlap71,72
+overlap overlap72,73
+testInput testInput81,82
+run run85,86
+run run86,87
+
+./src/One.hs,141
+module One One0,1
+parseInt parseInt4,5
+parseInt parseInt5,6
+run run9,10
+run run10,11
+findRep findRep14,15
+findRep findRep15,16
+
+./src/Ten.hs,840
+module Ten Ten0,1
+data Point Point8,9
+data Point = PointPoint8,9
+  { pos pos9,10
+  , vel vel10,11
+newtype PointMap PointMap13,14
+newtype PointMap = PointMap PointMap13,14
+instance instance15,16
+showPoints showPoints18,19
+showPoints showPoints19,20
+parsePoint parsePoint42,43
+parsePoint parsePoint43,44
+pointParser pointParser47,48
+pointParser pointParser48,49
+step step61,62
+step step62,63
+unStep unStep68,69
+unStep unStep69,70
+squaredDiffs squaredDiffs75,76
+squaredDiffs squaredDiffs76,77
+squaredDistance squaredDistance83,84
+squaredDistance squaredDistance84,85
+squaredDiffs' squaredDiffs'86,87
+squaredDiffs' squaredDiffs'87,88
+descend descend91,92
+descend descend92,93
+descend' descend'99,100
+descend' descend'100,101
+run run108,109
+run run109,110
+testInput testInput113,114
+
+./src/Two.hs,425
+module Two Two0,1
+newtype TwosThrees TwosThrees6,7
+newtype TwosThrees = TwosThrees TwosThrees6,7
+testInput testInput8,9
+testInputTwo testInputTwo16,17
+runOne runOne25,26
+runOne runOne26,27
+counts counts29,30
+counts counts30,31
+checksum checksum42,43
+checksum checksum43,44
+findPair findPair53,54
+findPair findPair54,55
+distance distance59,60
+distance distance60,61
+run run62,63
+run run63,64
+
+./src/Five.hs,187
+module Five Five0,1
+testInput testInput4,5
+step step6,7
+step step7,8
+react react13,14
+react react14,15
+remove remove19,20
+remove remove20,21
+run run22,23
+run run23,24
+
+./src/Eleven.hs,836
+module Eleven Eleven0,1
+newtype Grid Grid8,9
+newtype Grid = Grid Grid8,9
+makeGrid makeGrid10,11
+makeGrid makeGrid11,12
+readGrid readGrid13,14
+readGrid readGrid14,15
+makeRow makeRow16,17
+makeRow makeRow17,18
+computePowerLevel computePowerLevel23,24
+computePowerLevel computePowerLevel24,25
+computeSquare computeSquare28,29
+computeSquare computeSquare29,30
+computeSquare' computeSquare'33,34
+computeSquare' computeSquare'34,35
+maxSquare maxSquare41,42
+maxSquare maxSquare42,43
+maxSquare' maxSquare'47,48
+maxSquare' maxSquare'48,49
+mkMaxSquareMap mkMaxSquareMap57,58
+mkMaxSquareMap mkMaxSquareMap58,59
+createMap createMap64,65
+createMap createMap65,66
+createMap' createMap'75,76
+createMap' createMap'76,77
+gridOnes gridOnes92,93
+gridOnes gridOnes93,94
+run run99,100
+run run100,101
+
+./src/Nine.hs,290
+module Nine Nine0,1
+testInput testInput7,8
+testInput testInput8,9
+puzzleInput puzzleInput10,11
+puzzleInput puzzleInput11,12
+data GameState GameState13,14
+data GameState = GameState GameState13,14
+step step15,16
+step step16,17
+runGame runGame31,32
+runGame runGame32,33
+
+./src/Four.hs,1213
+module Four Four0,1
+testInput testInput7,8
+data Event Event25,26
+data Event = Begin Begin25,26
+data Event = Begin Int | Wake Wake25,26
+data Event = Begin Int | Wake | Sleep Sleep25,26
+data Entry Entry27,28
+data Entry = EntryEntry27,28
+  { date date28,29
+  , time time29,30
+  , event event30,31
+data Record Record33,34
+data Record = RecordRecord33,34
+  { guardAsleep guardAsleep34,35
+  , guardNumber guardNumber35,36
+entryParser entryParser38,39
+entryParser entryParser39,40
+incrementDay incrementDay63,64
+  | m `elem`elem65,66
+guardParser guardParser69,70
+guardParser guardParser70,71
+groupByDate groupByDate76,77
+groupByDate groupByDate77,78
+updateState updateState81,82
+updateState updateState82,83
+makeRecord makeRecord94,95
+makeRecord makeRecord95,96
+groupByGuard groupByGuard104,105
+groupByGuard groupByGuard105,106
+minutesAsleep minutesAsleep109,110
+minutesAsleep minutesAsleep110,111
+mostMinutesAsleep mostMinutesAsleep112,113
+mostMinutesAsleep mostMinutesAsleep113,114
+whichMinuteAsleep whichMinuteAsleep118,119
+whichMinuteAsleep whichMinuteAsleep119,120
+runOne runOne126,127
+runOne runOne127,128
+run run132,133
+run run133,134
