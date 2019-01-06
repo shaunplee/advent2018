@@ -4,12 +4,12 @@
 module Fifteen where
 
 import           Control.Monad.State
-import           Data.Heap           (MinHeap)
-import qualified Data.Heap           as H
 import           Data.List           (foldl', null, sort, sortBy)
 import           Data.Map.Strict     (Map)
 import qualified Data.Map.Strict     as M
 import           Data.Maybe          (catMaybes, isNothing)
+import           Data.Sequence       (Seq)
+import qualified Data.Sequence       as Sq
 import           Data.Set            (Set)
 import qualified Data.Set            as S
 import           Debug.Trace         (trace)
@@ -147,7 +147,7 @@ shortestPath :: GameState -> Pos -> Pos -> Maybe (Int, [Pos])
 shortestPath gs start end =
   let initialNeighbors = openNeighbors gs start
   in go
-       (H.fromList $
+       (Sq.fromList $
         zipWith3
           (PathPos (Just start))
           initialNeighbors
@@ -155,32 +155,30 @@ shortestPath gs start end =
           (map (estDist end) initialNeighbors))
        (M.singleton start (PathPos Nothing start 0 (estDist start end)))
   where
-    go :: MinHeap PathPos -> Map Pos PathPos -> Maybe (Int, [Pos])
+    go :: Seq PathPos -> Map Pos PathPos -> Maybe (Int, [Pos])
     go moves visited =
-      case H.view moves of
-        Nothing -> Nothing
-        Just (curMove, restMoves) ->
+      case moves of
+        Sq.Empty -> Nothing
+        (curMove Sq.:<| restMoves) ->
           if cur curMove == end
             then Just (cumdist curMove, reverse $ buildPath visited curMove)
             else let newNeighbors =
                        filter (`M.notMember` visited) $
                        openNeighbors gs (cur curMove)
                      newMoves =
-                       foldr
-                         H.insert
-                         restMoves
-                         (zipWith3
-                            (PathPos (Just $ cur curMove))
-                            newNeighbors
-                            (repeat (1 + cumdist curMove))
-                            (map (estDist end) newNeighbors))
+                       restMoves Sq.><
+                       (Sq.fromList
+                          (zipWith3
+                             (PathPos (Just $ cur curMove))
+                             newNeighbors
+                             (repeat (1 + cumdist curMove))
+                             (map (estDist end) newNeighbors)))
                      newVisited = M.insert (cur curMove) curMove visited
                  in go newMoves newVisited
     buildPath v c =
       case prev c of
         Nothing -> []
         Just p  -> cur c : buildPath v (v M.! p)
-
 
 estDist :: Pos -> Pos -> Int
 estDist (Pos (x1, y1)) (Pos (x2, y2)) = abs (x1 - x2) + abs (y1 - y2)
