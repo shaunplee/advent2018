@@ -2,6 +2,7 @@ module Main where
 
 import qualified Eight
 import qualified Eleven
+import qualified Fifteen
 import qualified Five
 import qualified Four
 import           Lib
@@ -17,6 +18,6 @@ import qualified Two
 
 main :: IO ()
 main = do
-  r <- readFile "13.txt"
-  putStrLn $ Thirteen.run r
+  r <- readFile "15.txt"
+  putStrLn $ show $ Fifteen.run r
   --- putStrLn $ show $ Nine.runGame (458, 7201900)

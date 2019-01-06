@@ -5,10 +5,10 @@ module Fifteen where
 import           Control.Monad.State
 import           Data.Heap           (MinHeap)
 import qualified Data.Heap           as H
-import           Data.List           (foldl', null, sort)
+import           Data.List           (foldl', null, sort, sortBy)
 import           Data.Map.Strict     (Map)
 import qualified Data.Map.Strict     as M
-import           Data.Maybe          (catMaybes)
+import           Data.Maybe          (catMaybes, isNothing)
 import           Data.Set            (Set)
 import qualified Data.Set            as S
 import           Debug.Trace         (trace)
@@ -155,7 +155,7 @@ shortestPath gs start end =
         Nothing -> Nothing
         Just (curMove, restMoves) ->
           if cur curMove == end
-            then Just (cumdist curMove, buildPath visited curMove)
+            then Just (cumdist curMove, reverse $ buildPath visited curMove)
             else let newNeighbors =
                        filter (`M.notMember` visited) $
                        openNeighbors gs (cur curMove)
@@ -185,14 +185,47 @@ differentCreatureT c1 c2 = creaturet c1 /= creaturet c2
 round :: GameState -> GameState
 round gs@(GameState (b, cs)) = foldl' unitTurn gs (S.toAscList cs)
 
+roundCheck :: Int -> GameState -> (Maybe (Int, Int, GameState), GameState)
+roundCheck r gs@(GameState (b, cs)) =
+  foldl'
+    (\(a, s@(GameState (_, css))) c ->
+       ( if combatComplete s
+           then Just $ (r * (foldr (+) 0 (map chp (S.toList css))), r, s)
+           else Nothing
+       , unitTurn s c))
+    (Nothing, gs)
+    (S.toAscList cs)
+
 unitTurn :: GameState -> Creature -> GameState
 unitTurn gs@(GameState (b, cs)) c =
-  let ts = S.filter (differentCreatureT c) cs
-      newC = unitMove c gs ts
-      adjts = S.filter (\t -> estDist (cpos newC) (cpos t) == 1) ts
-  in if S.null adjts
-     then GameState (b, S.insert newC (S.delete c cs)) -- finish turn
-     else GameState (b, S.insert newC (S.delete c cs)) -- TODO attack
+  let curCSet = S.filter (\x -> initp x == initp c) cs
+      mCurC =
+        if S.null curCSet
+          then Nothing
+          else Just $ S.elemAt 0 $ curCSet
+  in case mCurC of
+       Nothing -> gs
+       Just curC ->
+         let ts = S.filter (differentCreatureT c) cs
+             newC = unitMove curC gs ts
+             adjts = S.filter (\t -> estDist (cpos newC) (cpos t) == 1) ts
+         in if S.null adjts
+              then GameState (b, S.insert newC (S.delete curC cs))
+              else let (t:_) =
+                         sortBy
+                           (\c1 c2 ->
+                              compare (chp c1, cpos c1) (chp c2, cpos c2))
+                           (S.toList adjts)
+                       newT = newC `attack` t
+                       ncs =
+                         if chp newT <= 0
+                           then S.delete t cs
+                           else S.insert newT cs
+                   in GameState (b, S.insert newC (S.delete curC ncs))
+
+
+attack :: Creature -> Creature -> Creature
+attack attacker target = target {chp = (chp target) - 3}
 
 unitMove :: Creature -> GameState -> Set Creature -> Creature
 unitMove c gs ts =
@@ -203,7 +236,7 @@ unitMove c gs ts =
          in if null paths
               then c -- if no moves available, then don't move
               else let (_, path) = head paths
-                   in c {cpos = last path}
+                   in c {cpos = head path}
 
 testMove5 = [r|#########
 #.G...G.#
@@ -213,4 +246,67 @@ testMove5 = [r|#########
 #.......#
 #.......#
 #G..G..G#
+#########|]
+
+testInputC = [r|#######
+#.G...#
+#...EG#
+#.#.#G#
+#..G#E#
+#.....#
+#######|]
+
+gsc = parseMap testInputC
+
+combatComplete :: GameState -> Bool
+combatComplete (GameState (_, cs)) =
+  all (\c -> creaturet c == Elf) cs || all (\c -> creaturet c == Goblin) cs
+
+run :: String -> (Maybe (Int, Int, GameState))
+run s =
+  head $
+  dropWhile
+    isNothing
+    (evalState (mapM (state . roundCheck) [0 ..]) (parseMap s))
+
+testc1 = [r|#######
+#G..#E#
+#E#E.E#
+#G.##.#
+#...#E#
+#...E.#
+#######|]
+
+testc2 = [r|#######
+#E..EG#
+#.#G.E#
+#E.##E#
+#G..#.#
+#..E#.#
+#######|]
+
+testc3 = [r|#######
+#E.G#.#
+#.#G..#
+#G.#.G#
+#G..#.#
+#...E.#
+#######|]
+
+testc4 = [r|#######
+#.E...#
+#.#..G#
+#.###.#
+#E#G#G#
+#...#G#
+#######|]
+
+testc5 = [r|#########
+#G......#
+#.E.#...#
+#..##..G#
+#...##..#
+#...#...#
+#.G...G.#
+#.....G.#
 #########|]
