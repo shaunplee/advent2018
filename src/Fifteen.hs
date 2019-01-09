@@ -130,7 +130,7 @@ data PathPos = PathPos { prev    :: Maybe Pos
                        , prio    :: Int} deriving (Eq, Show)
 
 instance Ord PathPos where
-  compare p1 p2 = compare (prio p1, cur p1) (prio p2, cur p2)
+  compare p1 p2 = compare (cumdist p1, cur p1) (cumdist p2, cur p2)
 
 shortestPath :: GameState -> Pos -> Pos -> Maybe (Int, [Pos])
 shortestPath gs start end =
@@ -148,9 +148,9 @@ shortestPath gs start end =
     go moves visited =
       case H.view moves of
         Nothing -> Nothing
-        Just (curMove, restMoves) ->
+        Just (curMove, restMoves) -> trace (show curMove ++ "\n" ++ show restMoves ++ "\n") $
           if cur curMove == end
-            then Just (cumdist curMove, reverse $ buildPath visited curMove)
+            then Just (cumdist curMove, buildPath visited curMove)
             else let newNeighbors =
                        filter (`M.notMember` visited) $
                        openNeighbors gs (cur curMove)
@@ -182,6 +182,7 @@ round gs@(GameState (b, cs)) = foldl' unitTurn gs (M.elems cs)
 
 roundCheck :: Int -> GameState -> (Maybe (Int, Int, GameState), GameState)
 roundCheck r gs@(GameState (b, cs)) =
+  trace ("round " ++ show r ++ " initial state: " ++ show gs ++ "\n") $
   foldl'
     (\(a, s@(GameState (_, css))) c ->
        ( if combatComplete s
@@ -191,16 +192,19 @@ roundCheck r gs@(GameState (b, cs)) =
     (Nothing, gs)
     (M.elems cs)
 
+
 unitTurn :: GameState -> Creature -> GameState
 unitTurn gs@(GameState (b, cs)) c =
+  trace ("Unit " ++ show c ++ show (cpos c) ++ " starts turn") $
   case cs M.!? (cpos c) of
-    Nothing -> gs
+    Nothing -> trace "but unit is dead! Skipping unit." $ gs
     Just curC ->
       let ts = M.filter (differentCreatureT c) cs
           newC = unitMove curC gs ts
           adjts = M.filter (\t -> estDist (cpos newC) (cpos t) == 1) ts
       in if M.null adjts
-           then GameState
+           then trace (show newC ++ " will not fight") $
+                GameState
                   (b, M.insert (cpos newC) newC (M.delete (cpos curC) cs))
            else let (t:_) =
                       sortBy
@@ -211,8 +215,10 @@ unitTurn gs@(GameState (b, cs)) c =
                       if chp newT <= 0
                         then M.delete (cpos t) cs
                         else M.adjust (const newT) (cpos newT) cs
-                in GameState
+                in trace (show newC ++ " attacks " ++ show t ++ "\nresult: " ++ show newT) $
+                  GameState
                      (b, M.insert (cpos newC) newC (M.delete (cpos curC) ncs))
+
 
 attack :: Creature -> Creature -> Creature
 attack attacker target = target {chp = (chp target) - 3}
@@ -220,13 +226,17 @@ attack attacker target = target {chp = (chp target) - 3}
 unitMove :: Creature -> GameState -> Creatures -> Creature
 unitMove c gs ts =
   if any (\t -> estDist (cpos c) (cpos t) == 1) ts
-    then c -- if adjacent a target, then don't move
-    else let oInRange = concatMap (openNeighbors gs) (map cpos $ M.elems ts)
+    then trace (show c ++ " will not move") $
+         c -- if adjacent a target, then don't move
+    else trace (show c ++ " wants to move") $
+         let oInRange = concatMap (openNeighbors gs) (map cpos $ M.elems ts)
              paths = sort $ catMaybes $ map (shortestPath gs (cpos c)) oInRange
          in if null paths
-              then c -- if no moves available, then don't move
-              else let (_, path) = head paths
-                   in c {cpos = head path}
+              then trace "but has no moves available" $
+                   c -- if no moves available, then don't move
+              else trace ("paths:\n" ++ concatMap (("\n" ++) . show) paths) $
+                   let (_, path) = head paths
+                   in c {cpos = last path}
 
 testMove5 = [r|#########
 #.G...G.#
@@ -300,3 +310,19 @@ testc5 = [r|#########
 #.G...G.#
 #.....G.#
 #########|]
+
+battle1 = [r|#######
+#.G...#
+#...EG#
+#.#.#G#
+#..G#E#
+#.....#
+#######|]
+
+battle1r23 = [r|#######
+#...G.#
+#..G.G#
+#.#.#G#
+#...#E#
+#.....#
+#######|]
