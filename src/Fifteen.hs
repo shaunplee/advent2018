@@ -202,7 +202,7 @@ round gs@(GameState (b, cs)) = foldl' unitTurn gs (M.elems cs)
 
 roundCheck :: Int -> GameState -> (Maybe (Int, Int, GameState), GameState)
 roundCheck r gs@(GameState (b, cs)) =
-  trace ("round " ++ show r ++ " initial state: " ++ show gs ++ "\n") $
+--  trace ("round " ++ show r ++ " initial state: " ++ show gs ++ "\n") $
   foldl'
     (\(a, s@(GameState (_, css))) c ->
        ( if combatComplete s
@@ -211,7 +211,6 @@ roundCheck r gs@(GameState (b, cs)) =
        , unitTurn s c))
     (Nothing, gs)
     (M.elems cs)
-
 
 unitTurn :: GameState -> Creature -> GameState
 unitTurn gs@(GameState (b, cs)) c =
@@ -240,24 +239,41 @@ unitTurn gs@(GameState (b, cs)) c =
                   GameState
                      (b, M.insert (cpos newC) newC (M.delete (cpos curC) ncs))
 
-
 attack :: Creature -> Creature -> Creature
 attack attacker target = target {chp = (chp target) - 3}
 
 unitMove :: Creature -> GameState -> Creatures -> Creature
 unitMove c gs ts =
   if any (\t -> estDist (cpos c) (cpos t) == 1) ts
-    then -- trace (show c ++ " will not move") $
-         c -- if adjacent a target, then don't move
-    else -- trace (show c ++ " wants to move") $
-         let oInRange = concatMap (openNeighbors gs) (map cpos $ M.elems ts)
-             paths = sort $ catMaybes $ map (shortestPath gs (cpos c)) oInRange
-         in if null paths
-              then -- trace "but has no moves available" $
-                   c -- if no moves available, then don't move
-              else -- trace ("paths:\n" ++ concatMap (("\n" ++) . show) paths) $
-                   let (_, path) = head paths
-                   in c {cpos = last path}
+         -- trace (show c ++ " will not move") $
+    then c -- if adjacent a target, then don't move
+         -- trace (show c ++ " wants to move") $
+    else let oInRange = concatMap (openNeighbors gs) (map cpos $ M.elems ts)
+             paths =
+               sortBy
+                 (\(d1, ps1) (d2, ps2) -> compare (d1, last ps1) (d2, last ps2)) $
+               catMaybes $ map (shortestPath gs (cpos c)) oInRange
+          in if null paths
+                   -- trace "but has no moves available" $
+               then c -- if no moves available, then don't move
+                   -- trace ("paths:\n" ++ concatMap (("\n" ++) . show) paths) $
+               else let (_, path) = head paths
+                     in c {cpos = last path}
+
+
+gsc = parseMap testInputC
+
+combatComplete :: GameState -> Bool
+combatComplete (GameState (_, cs)) =
+  all (\c -> creaturet c == Elf) cs || all (\c -> creaturet c == Goblin) cs
+
+run' :: String -> (Maybe (Int, Int, GameState))
+run' s =
+  head $
+  dropWhile
+    isNothing
+    (evalState (mapM (state . roundCheck) [0 ..]) (parseMap s))
+
 
 testMove5 = [r|#########
 #.G...G.#
@@ -276,19 +292,6 @@ testInputC = [r|#######
 #..G#E#
 #.....#
 #######|]
-
-gsc = parseMap testInputC
-
-combatComplete :: GameState -> Bool
-combatComplete (GameState (_, cs)) =
-  all (\c -> creaturet c == Elf) cs || all (\c -> creaturet c == Goblin) cs
-
-run :: String -> (Maybe (Int, Int, GameState))
-run s =
-  head $
-  dropWhile
-    isNothing
-    (evalState (mapM (state . roundCheck) [0 ..]) (parseMap s))
 
 testc1 = [r|#######
 #G..#E#
