@@ -2,10 +2,11 @@
 
 module Fifteen where
 
+import           Control.Applicative
 import           Control.Monad.State
 import           Data.Heap           (MinHeap)
 import qualified Data.Heap           as H
-import           Data.List           (foldl', null, sort, sortBy)
+import           Data.List           (find, foldl', null, sort, sortBy)
 import           Data.Map.Strict     (Map)
 import qualified Data.Map.Strict     as M
 import           Data.Maybe          (catMaybes, isNothing)
@@ -135,41 +136,60 @@ instance Ord PathPos where
 shortestPath :: GameState -> Pos -> Pos -> Maybe (Int, [Pos])
 shortestPath gs start end =
   let initialNeighbors = openNeighbors gs start
-  in go
-       (H.fromList $
-        zipWith3
-          (PathPos (Just start))
-          initialNeighbors
-          (repeat 1)
-          (map (estDist end) initialNeighbors))
-       (M.singleton start (PathPos Nothing start 0 (estDist start end)))
+   in go
+        (H.fromList $
+         zipWith3
+           (PathPos (Just start))
+           initialNeighbors
+           (repeat 1)
+           (map (estDist end) initialNeighbors))
+        (M.singleton start (PathPos Nothing start 0 (estDist start end)))
   where
     go :: MinHeap PathPos -> Map Pos PathPos -> Maybe (Int, [Pos])
     go moves visited =
       case H.view moves of
         Nothing -> Nothing
-        Just (curMove, restMoves) -> trace (show curMove ++ "\n" ++ show restMoves ++ "\n") $
-          if cur curMove == end
-            then Just (cumdist curMove, buildPath visited curMove)
-            else let newNeighbors =
-                       filter (`M.notMember` visited) $
-                       openNeighbors gs (cur curMove)
-                     newMoves =
-                       foldr
-                         H.insert
-                         restMoves
-                         (zipWith3
-                            (PathPos (Just $ cur curMove))
-                            newNeighbors
-                            (repeat (1 + cumdist curMove))
-                            (map (estDist end) newNeighbors))
-                     newVisited = M.insert (cur curMove) curMove visited
-                 in go newMoves newVisited
+        Just (curMove, restMoves) ->
+          let (frontier, rMoves) =
+                H.span (\pp -> (cumdist pp) == cumdist curMove) moves
+           in case find (\m -> cur m == end) frontier of
+                Just cMove -> Just (cumdist cMove, buildPath visited cMove)
+                Nothing ->
+                  let newNeighbors =
+                        S.toList $
+                        S.fromList $
+                        concatMap
+                          (\m ->
+                             filter (`M.notMember` visited) $
+                             openNeighbors gs (cur m))
+                          frontier
+                      bestParent :: Pos -> Pos
+                      bestParent m =
+                        let mns = openNeighbors gs m
+                            ps = filter (\pp -> (cur pp) `elem` mns) frontier
+                         in cur $ minimum ps
+                      newMoves =
+                        foldr
+                          H.insert
+                          rMoves
+                          (PathPos <$>
+                           (ZipList (map (Just . bestParent) newNeighbors)) <*>
+                           (ZipList newNeighbors) <*>
+                           (ZipList $ repeat (1 + cumdist curMove)) <*>
+                           (ZipList $
+                            map
+                              (\n -> 1 + cumdist curMove + estDist end n)
+                              newNeighbors))
+                      newVisited =
+                        foldl'
+                          (\v m -> M.insertWith min (cur m) m v)
+                          visited
+                          frontier
+                   in go newMoves newVisited
     buildPath v c =
       case prev c of
         Nothing -> []
         Just p  -> cur c : buildPath v (v M.! p)
-
 
 estDist :: Pos -> Pos -> Int
 estDist (Pos (x1, y1)) (Pos (x2, y2)) = abs (x1 - x2) + abs (y1 - y2)
@@ -182,7 +202,7 @@ round gs@(GameState (b, cs)) = foldl' unitTurn gs (M.elems cs)
 
 roundCheck :: Int -> GameState -> (Maybe (Int, Int, GameState), GameState)
 roundCheck r gs@(GameState (b, cs)) =
-  trace ("round " ++ show r ++ " initial state: " ++ show gs ++ "\n") $
+  -- trace ("round " ++ show r ++ " initial state: " ++ show gs ++ "\n") $
   foldl'
     (\(a, s@(GameState (_, css))) c ->
        ( if combatComplete s
@@ -195,15 +215,16 @@ roundCheck r gs@(GameState (b, cs)) =
 
 unitTurn :: GameState -> Creature -> GameState
 unitTurn gs@(GameState (b, cs)) c =
-  trace ("Unit " ++ show c ++ show (cpos c) ++ " starts turn") $
+  -- trace ("Unit " ++ show c ++ show (cpos c) ++ " starts turn") $
   case cs M.!? (cpos c) of
-    Nothing -> trace "but unit is dead! Skipping unit." $ gs
+    -- Nothing -> trace "but unit is dead! Skipping unit." $ gs
+    Nothing -> gs
     Just curC ->
       let ts = M.filter (differentCreatureT c) cs
           newC = unitMove curC gs ts
           adjts = M.filter (\t -> estDist (cpos newC) (cpos t) == 1) ts
       in if M.null adjts
-           then trace (show newC ++ " will not fight") $
+           then -- trace (show newC ++ " will not fight") $
                 GameState
                   (b, M.insert (cpos newC) newC (M.delete (cpos curC) cs))
            else let (t:_) =
@@ -215,7 +236,7 @@ unitTurn gs@(GameState (b, cs)) c =
                       if chp newT <= 0
                         then M.delete (cpos t) cs
                         else M.adjust (const newT) (cpos newT) cs
-                in trace (show newC ++ " attacks " ++ show t ++ "\nresult: " ++ show newT) $
+                in -- trace (show newC ++ " attacks " ++ show t ++ "\nresult: " ++ show newT) $
                   GameState
                      (b, M.insert (cpos newC) newC (M.delete (cpos curC) ncs))
 
@@ -226,15 +247,15 @@ attack attacker target = target {chp = (chp target) - 3}
 unitMove :: Creature -> GameState -> Creatures -> Creature
 unitMove c gs ts =
   if any (\t -> estDist (cpos c) (cpos t) == 1) ts
-    then trace (show c ++ " will not move") $
+    then -- trace (show c ++ " will not move") $
          c -- if adjacent a target, then don't move
-    else trace (show c ++ " wants to move") $
+    else -- trace (show c ++ " wants to move") $
          let oInRange = concatMap (openNeighbors gs) (map cpos $ M.elems ts)
              paths = sort $ catMaybes $ map (shortestPath gs (cpos c)) oInRange
          in if null paths
-              then trace "but has no moves available" $
+              then -- trace "but has no moves available" $
                    c -- if no moves available, then don't move
-              else trace ("paths:\n" ++ concatMap (("\n" ++) . show) paths) $
+              else -- trace ("paths:\n" ++ concatMap (("\n" ++) . show) paths) $
                    let (_, path) = head paths
                    in c {cpos = last path}
 
@@ -326,3 +347,30 @@ battle1r23 = [r|#######
 #...#E#
 #.....#
 #######|]
+
+battle1r = [r|#######
+#.G...#
+#...G.#
+#.#G#G#
+#...#E#
+#.....#
+#######|]
+
+battle2 = [r|#######
+#G..#E#
+#E#E.E#
+#G.##.#
+#...#E#
+#...E.#
+#######|]
+
+battle3 = [r|#######
+#E..EG#
+#.#G.E#
+#E.##E#
+#G..#.#
+#..E#.#
+#######|]
+
+gs@(GameState (b, cs)) = parseMap battle1r
+(_, c) = head $ M.toList cs
