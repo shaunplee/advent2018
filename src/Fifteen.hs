@@ -70,10 +70,10 @@ instance Show Square where
   show Open = "."
   show Wall = "#"
 
-newtype GameState = GameState (Board, Creatures)
+newtype GameState = GameState (Board, Creatures, Int)
 
 instance Show GameState where
-  show (GameState (b, cs)) =
+  show (GameState (b, cs, _)) =
     let (Pos (xmin, ymin), _) = M.findMin b
         (Pos (xmax, ymax), _) = M.findMax b
         showRow y = ('\n' :
@@ -107,18 +107,20 @@ parseRow y rowS =
       creatures = map (\c -> (cpos c, c)) $ catMaybes $ map snd parsedrow
   in (squares, creatures)
 
-parseMap :: String -> GameState
-parseMap s = GameState $
-  foldl'
-    (\(sqs, crs) (y, r) ->
-       let (newSquares, newCreatures) = parseRow y r
-       in ( M.union sqs (M.fromList newSquares)
-          , M.union crs (M.fromList newCreatures)))
-    (M.empty, M.empty)
-    (zip [0 ..] (lines s))
+parseMap :: String -> Int -> GameState
+parseMap s ap = GameState $ (b, cs, ap)
+  where
+    (b, cs) =
+      foldl'
+        (\(sqs, crs) (y, r) ->
+           let (newSquares, newCreatures) = parseRow y r
+            in ( M.union sqs (M.fromList newSquares)
+               , M.union crs (M.fromList newCreatures)))
+        (M.empty, M.empty)
+        (zip [0 ..] (lines s))
 
 openNeighbors :: GameState -> Pos -> [Pos]
-openNeighbors (GameState (b, cs)) (Pos (x, y)) =
+openNeighbors (GameState (b, cs, _)) (Pos (x, y)) =
   let adjacent = map Pos [(x, y - 1), (x - 1, y), (x + 1, y), (x, y + 1)]
   in filter (\pos -> b M.! pos /= Wall && notOccupied cs pos) adjacent
 
@@ -198,13 +200,13 @@ differentCreatureT :: Creature -> Creature -> Bool
 differentCreatureT c1 c2 = creaturet c1 /= creaturet c2
 
 round :: GameState -> GameState
-round gs@(GameState (b, cs)) = foldl' unitTurn gs (M.elems cs)
+round gs@(GameState (b, cs, _)) = foldl' unitTurn gs (M.elems cs)
 
 roundCheck :: Int -> GameState -> (Maybe (Int, Int, GameState), GameState)
-roundCheck r gs@(GameState (b, cs)) =
+roundCheck r gs@(GameState (b, cs, _)) =
 --  trace ("round " ++ show r ++ " initial state: " ++ show gs ++ "\n") $
   foldl'
-    (\(a, s@(GameState (_, css))) c ->
+    (\(a, s@(GameState (_, css, _))) c ->
        ( if combatComplete s
            then Just $ (r * (foldr (+) 0 (map chp (M.elems css))), r, s)
            else Nothing
@@ -213,34 +215,45 @@ roundCheck r gs@(GameState (b, cs)) =
     (M.elems cs)
 
 unitTurn :: GameState -> Creature -> GameState
-unitTurn gs@(GameState (b, cs)) c =
+unitTurn gs@(GameState (b, cs, ap)) c
   -- trace ("Unit " ++ show c ++ show (cpos c) ++ " starts turn") $
-  case cs M.!? (cpos c) of
+ =
+  case cs M.!? (cpos c)
     -- Nothing -> trace "but unit is dead! Skipping unit." $ gs
+        of
     Nothing -> gs
     Just curC ->
       let ts = M.filter (differentCreatureT c) cs
           newC = unitMove curC gs ts
           adjts = M.filter (\t -> estDist (cpos newC) (cpos t) == 1) ts
-      in if M.null adjts
-           then -- trace (show newC ++ " will not fight") $
-                GameState
-                  (b, M.insert (cpos newC) newC (M.delete (cpos curC) cs))
-           else let (t:_) =
-                      sortBy
-                        (\c1 c2 -> compare (chp c1, cpos c1) (chp c2, cpos c2))
-                        (M.elems adjts)
-                    newT = newC `attack` t
-                    ncs =
-                      if chp newT <= 0
-                        then M.delete (cpos t) cs
-                        else M.adjust (const newT) (cpos newT) cs
-                in -- trace (show newC ++ " attacks " ++ show t ++ "\nresult: " ++ show newT) $
-                  GameState
-                     (b, M.insert (cpos newC) newC (M.delete (cpos curC) ncs))
+       in if M.null adjts
+                -- trace (show newC ++ " will not fight") $
+            then GameState
+                   (b, M.insert (cpos newC) newC (M.delete (cpos curC) cs), ap)
+            else let (t:_) =
+                       sortBy
+                         (\c1 c2 -> compare (chp c1, cpos c1) (chp c2, cpos c2))
+                         (M.elems adjts)
+                     newT = attack newC t ap
+                     ncs =
+                       if chp newT <= 0
+                         then M.delete (cpos t) cs
+                         else M.adjust (const newT) (cpos newT) cs
+                   -- trace (show newC ++ " attacks " ++ show t ++ "\nresult: " ++ show newT) $
+                  in GameState
+                       ( b
+                       , M.insert (cpos newC) newC (M.delete (cpos curC) ncs)
+                       , ap)
 
-attack :: Creature -> Creature -> Creature
-attack attacker target = target {chp = (chp target) - 3}
+attack :: Creature -> Creature -> Int -> Creature
+attack attacker target ap =
+  target
+    { chp =
+        (chp target) -
+        (if creaturet attacker == Elf
+           then ap
+           else 3)
+    }
 
 unitMove :: Creature -> GameState -> Creatures -> Creature
 unitMove c gs ts =
@@ -264,7 +277,7 @@ unitMove c gs ts =
 gsc = parseMap testInputC
 
 combatComplete :: GameState -> Bool
-combatComplete (GameState (_, cs)) =
+combatComplete (GameState (_, cs, _)) =
   all (\c -> creaturet c == Elf) cs || all (\c -> creaturet c == Goblin) cs
 
 run' :: String -> (Maybe (Int, Int, GameState))
@@ -272,8 +285,24 @@ run' s =
   head $
   dropWhile
     isNothing
-    (evalState (mapM (state . roundCheck) [0 ..]) (parseMap s))
+    (evalState (mapM (state . roundCheck) [0 ..]) (parseMap s 3))
 
+run :: String -> (Maybe (Int, Int, GameState))
+run s =
+  let gs@(GameState (b, cs, _)) = parseMap s 3
+      numElves = length (filter (\c -> creaturet c == Elf) (M.elems cs))
+      sims = map (runSim gs) [4 ..]
+      elvesDie Nothing = True
+      elvesDie (Just (outcome, rounds, GameState (_, css, _))) =
+        length (filter (\c -> creaturet c == Elf) (M.elems css)) /= numElves
+   in head $ dropWhile elvesDie sims
+
+runSim :: GameState -> Int -> (Maybe (Int, Int, GameState))
+runSim (GameState (b, cs, _)) ap =
+  head $
+  dropWhile
+    isNothing
+    (evalState (mapM (state . roundCheck) [0 ..]) (GameState (b, cs, ap)))
 
 testMove5 = [r|#########
 #.G...G.#
