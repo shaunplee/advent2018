@@ -215,12 +215,10 @@ roundCheck r gs@(GameState (b, cs, _)) =
     (M.elems cs)
 
 unitTurn :: GameState -> Creature -> GameState
-unitTurn gs@(GameState (b, cs, ap)) c
+unitTurn gs@(GameState (b, cs, ap)) c =
   -- trace ("Unit " ++ show c ++ show (cpos c) ++ " starts turn") $
- =
-  case cs M.!? (cpos c)
+  case cs M.!? (cpos c) of
     -- Nothing -> trace "but unit is dead! Skipping unit." $ gs
-        of
     Nothing -> gs
     Just curC ->
       let ts = M.filter (differentCreatureT c) cs
@@ -272,9 +270,6 @@ unitMove c gs ts =
                    -- trace ("paths:\n" ++ concatMap (("\n" ++) . show) paths) $
                else let (_, path) = head paths
                      in c {cpos = last path}
-
-
-gsc = parseMap testInputC
 
 combatComplete :: GameState -> Bool
 combatComplete (GameState (_, cs, _)) =
